@@ -1,6 +1,5 @@
 ############################################################
-# Script 01: PCA-based state definition using GMM
-# Purpose: Identify conformational states and centroid frames
+# Script 01: Conformational state definition using PCA + GMM
 ############################################################
 
 # --- Load libraries ---
@@ -9,7 +8,7 @@ library(mclust)
 library(dplyr)
 
 # --- Input files ---
-topology_pdb <- "Reference.pdb"
+topology_pdb  <- "Reference.pdb"
 trajectory_dcd <- "Trajectory.dcd"
 
 # --- Structural regions (defined from structural analysis) ---
@@ -20,29 +19,26 @@ pocket_resnos <- 21:109
 pdb  <- read.pdb(topology_pdb)
 traj <- read.dcd(trajectory_dcd)
 
-# --- Heavy-atom helix–pocket average distance ---
-sel_helix  <- atom.select(pdb, resno = helix_resnos, string = "noh")
-sel_pocket <- atom.select(pdb, resno = pocket_resnos, string = "noh")
+# --- Average heavy-atom helix–pocket distance ---
+helix_sel  <- atom.select(pdb, resno = helix_resnos, string = "noh")
+pocket_sel <- atom.select(pdb, resno = pocket_resnos, string = "noh")
 
-avg_heavy_distance <- function(i) {
+avg_heavy_dist <- function(i) {
   xyz <- traj[i, ]
-  H <- matrix(xyz[sel_helix$xyz],  ncol = 3, byrow = TRUE)
-  P <- matrix(xyz[sel_pocket$xyz], ncol = 3, byrow = TRUE)
+  H <- matrix(xyz[helix_sel$xyz],  ncol = 3, byrow = TRUE)
+  P <- matrix(xyz[pocket_sel$xyz], ncol = 3, byrow = TRUE)
   mean(bio3d::dist.xyz(H, P), na.rm = TRUE)
 }
 
-dist_all <- sapply(seq_len(nrow(traj)), avg_heavy_distance)
+dist_all <- sapply(seq_len(nrow(traj)), avg_heavy_dist)
 ok <- is.finite(dist_all)
 
-# --- Global PCA on Cα atoms ---
-sel_ca <- atom.select(pdb, elety = "CA")
-pc <- pca.xyz(traj[, sel_ca$xyz], rm.gaps = TRUE)
+# --- Global PCA on C-alpha atoms ---
+ca_sel <- atom.select(pdb, elety = "CA")
+pc <- pca.xyz(traj[, ca_sel$xyz], rm.gaps = TRUE)
 
 # --- Orient PC1 for physical interpretability ---
-rho <- suppressWarnings(
-  cor(pc$z[ok, 1], dist_all[ok], method = "spearman")
-)
-
+rho <- suppressWarnings(cor(pc$z[ok, 1], dist_all[ok], method = "spearman"))
 if (!is.na(rho) && rho < 0) {
   pc$z <- -pc$z
 }
@@ -55,7 +51,7 @@ cat("Optimal number of states (BIC):", gmm$G, "\n")
 
 states <- factor(paste0("Cluster ", gmm$classification))
 
-results <- data.frame(
+state_table <- data.frame(
   Frame    = which(ok),
   PC1      = pc1,
   PC2      = pc$z[ok, 2],
@@ -63,12 +59,14 @@ results <- data.frame(
   State    = states
 )
 
-write.csv(results,
-          paste0("global_PC1_GMM_", gmm$G, "_states.csv"),
-          row.names = FALSE)
+write.csv(
+  state_table,
+  paste0("global_PC1_GMM_", gmm$G, "_states.csv"),
+  row.names = FALSE
+)
 
 # --- Identify centroid frames ---
-centroids <- results %>%
+centroids <- state_table %>%
   group_by(State) %>%
   mutate(
     c1 = mean(PC1),
@@ -78,7 +76,7 @@ centroids <- results %>%
   slice_min(d, n = 1) %>%
   ungroup()
 
-# --- Write centroid PDBs ---
+# --- Write centroid structures ---
 for (i in seq_len(nrow(centroids))) {
   write.pdb(
     pdb = pdb,
@@ -87,5 +85,5 @@ for (i in seq_len(nrow(centroids))) {
   )
 }
 
-# --- Save session info ---
+# --- Save session information ---
 writeLines(capture.output(sessionInfo()), "sessionInfo.txt")
