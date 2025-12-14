@@ -25,8 +25,12 @@ gmm$State <- factor(gmm$State)
 helix_resids <- sort(unique(pdb$atom$resno[pdb$atom$resno %in% helix_resnos]))
 pocket_inds  <- atom.select(pdb, resno = pocket_resnos, string = "noh")$xyz
 
-perres_min <- matrix(NA, nrow = length(helix_resids), ncol = nrow(traj),
-                     dimnames = list(helix_resids, NULL))
+perres_min <- matrix(
+  NA_real_,
+  nrow = length(helix_resids),
+  ncol = nrow(traj),
+  dimnames = list(helix_resids, NULL)
+)
 
 for (r in seq_along(helix_resids)) {
   h_inds <- atom.select(pdb, resno = helix_resids[r], string = "noh")$xyz
@@ -46,10 +50,10 @@ state_frames <- split(gmm$Frame, gmm$State)
 
 contact_df <- lapply(helix_resids, function(r) {
   v <- perres_min[as.character(r), ]
-  out <- sapply(state_frames, function(fr)
+  frac <- sapply(state_frames, function(fr)
     mean(v[fr] <= contact_cutoff, na.rm = TRUE)
   )
-  c(Residue = r, out)
+  c(Residue = r, frac)
 })
 
 contact_df <- as.data.frame(do.call(rbind, contact_df))
