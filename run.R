@@ -3,9 +3,9 @@ library(bio3d)
 library(ggplot2)
 library(mclust) # For Gaussian Mixture Modeling
 library(RColorBrewer)
-library(dplyr)    # For data manipulation, used to find centroids
+library(dplyr)    
 
-# --- 2. Define Publication Theme ---
+# --- 2. Define Theme ---
 # A custom ggplot theme for creating publication-quality plots.
 theme_publication <- function(base_size=14) {
     (theme_bw(base_size=base_size)
@@ -23,10 +23,10 @@ theme_publication <- function(base_size=14) {
 }
 
 # --- 3. Inputs and Data Loading ---
-topology_pdb <- "mdm25121025_57a20_512_1024_ref.pdb"
-dcd_file     <- "mdm25121025_57a20_512_1024_traj.dcd"
-helix_resnos <- 170:185
-pocket_resnos <- 1:89
+topology_pdb <- "Refrence.pdb"
+dcd_file     <- "Trajectory.dcd"
+helix_resnos <- 190:205
+pocket_resnos <- 21:109
 
 # Load the topology and trajectory files
 topology <- read.pdb(topology_pdb)
@@ -231,26 +231,10 @@ ggsave(paste0("5121024_figure_B_PCA_scatter_global_", num_states, "state.png"), 
 ggsave(paste0("5121024_figure_C_distance_box_global_", num_states, "state.png"), plot_C, width = 7, height = 5, dpi = 800)
 ggsave(paste0("5121024_figure_D_correlation_", num_states, "state.png"), plot_D, width = 7, height = 5, dpi = 800)
 
-
-ggsave(paste0("5121024_figure_A_density_global_", num_states, "state.pdf"), plot_A, width = 7, height = 5, device = cairo_pdf)
-ggsave(paste0("5121024_figure_B_PCA_scatter_global_", num_states, "state.pdf"), plot_B, width = 7, height = 5, device = cairo_pdf)
-ggsave(paste0("5121024_figure_C_distance_box_global_", num_states, "state.pdf"), plot_C, width = 7, height = 5, device = cairo_pdf)
-ggsave(paste0("5121024_figure_D_correlation_", num_states, "state.pdf"), plot_D, width = 7, height = 5, device = cairo_pdf)
-
 print(paste("All plots for the Global PCA", num_states, "-state model saved as separate, high-resolution files."))
 
 
-
-
-
-
-
-
-
-
-
-
-# --- 2. Define Publication Theme ---
+# --- 2. Define Theme ---
 # A custom ggplot theme for creating publication-quality plots.
 theme_publication <- function(base_size=14) {
     (theme_bw(base_size=base_size)
@@ -346,11 +330,11 @@ theme_publication <- function(base_size=14) {
 
 # --- 3. Inputs and Data Loading ---
 # IMPORTANT: Update gmm_file to the name of your specific GMM results CSV.
-topology_pdb <- "mdm25121025_57a20_512_1024_ref.pdb"
-dcd_file     <- "mdm25121025_57a20_512_1024_traj.dcd"
-gmm_file     <- "5121024_global_pc1_gmm_3_states.csv" #<-- EXAMPLE FILENAME, PLEASE UPDATE
-helix_resnos <- 170:185
-pocket_resnos <- 1:89
+topology_pdb <- "refrence.pdb"
+dcd_file     <- "trajectory.dcd"
+gmm_file     <- "5121024_global_pc1_gmm_states.csv" #<-- EXAMPLE FILENAME, PLEASE UPDATE
+helix_resnos <- 190:205
+pocket_resnos <- 21:109
 
 # Load structural data
 topology <- read.pdb(topology_pdb)
@@ -492,11 +476,11 @@ theme_publication <- function(base_size=14) {
 }
 
 # --- 3. Inputs and Parameters ---
-topology_pdb  <- "mdm25121025_57a20_512_1024_ref.pdb"
-dcd_file      <- "mdm25121025_57a20_512_1024_traj.dcd"
-gmm_file      <- "5121024_global_pc1_gmm_3_states.csv" # <-- IMPORTANT: File with pre-computed states
-helix_resnos  <- 170:185
-pocket_resnos <- 1:89
+topology_pdb  <- "refrence.pdb"
+dcd_file      <- "trajectory.dcd"
+gmm_file      <- "5121024_global_pc1_gmm_states.csv" # <-- IMPORTANT: File with pre-computed states
+helix_resnos  <- 190:205
+pocket_resnos <- 21:109
 contact_cutoff <- 5
 
 # --- 4. Load Data and Pre-calculate Atom Indices ---
@@ -611,7 +595,7 @@ ggsave("heavy_atom_contact_heatmap_from_GMM.png", p_heatmap, width=12, height=8,
 cat("\nHeatmap based on pre-computed GMM states saved to 'heavy_atom_contact_heatmap_from_GMM.png'\n")
 
 
-# For your four main plots:
+# For plots:
 ggsave(paste0("5121024_figure_A_density_global_", num_states, "state.svg"), plot_A, width = 7, height = 5)
 ggsave(paste0("5121024_figure_B_PCA_scatter_global_", num_states, "state.svg"), plot_B, width = 7, height = 5)
 ggsave(paste0("5121024_figure_C_distance_box_global_", num_states, "state.svg"), plot_C, width = 7, height = 5)
@@ -622,4 +606,4 @@ ggsave("minimum_ca_distance_violin_plot.svg", p_violin_pub, width = 7, height = 
 
 # For gate residue frequency and contact fraction plots:
 ggsave("figure_gate_residue_freq.svg", plot_gate_freq, width = 7, height = 5)
-ggsave("figure_contact_fractions.svg", plot_contact_frac, width = 8, height = 5)
+ggsave("figure_contact_fractions.svg", plot_contact_frac, width = 7, height = 5)
