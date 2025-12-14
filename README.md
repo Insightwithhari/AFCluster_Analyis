@@ -30,5 +30,4 @@ This repository contains the R scripts required to reproduce the AFCluster analy
     * Run `01_global_analysis.R` first. This will generate the `MDM2_Analysis_gmm_states.csv` file.
     * Run `02_residue_analysis.R` second. This requires the CSV output from the first script.
 
-## Data Availability
-The raw MD trajectories and reference structure files used in the original study are available from the corresponding author upon request due to file size constraints.
+
