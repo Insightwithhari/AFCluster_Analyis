@@ -44,6 +44,10 @@ theme_publication <- function(base_size=14) {
 
 # --- 4. Load Data ---
 cat("Loading Data and GMM States...\n")
+if(!file.exists(topology_pdb)) stop(paste("File not found:", topology_pdb))
+if(!file.exists(dcd_file)) stop(paste("File not found:", dcd_file))
+if(!file.exists(gmm_file)) stop(paste("GMM file not found. Please run Script 01 first."))
+
 topology <- read.pdb(topology_pdb)
 traj_xyz <- read.dcd(dcd_file)
 gmm_data <- read.csv(gmm_file)
@@ -77,7 +81,7 @@ colnames(df_freq) <- c("Residue", "Count")
 
 plot_gate <- ggplot(df_freq, aes(x = reorder(Residue, -Count), y = Count)) +
     geom_col(fill = "steelblue", color = "black") +
-    scale_x_discrete(labels = function(x) as.character(as.numeric(as.character(x)) + 20)) +
+    # REMOVED +20 OFFSET
     labs(title = "Gate Residue Frequencies", x = "Helix Residue", y = "Frames as Closest Residue") +
     theme_publication() + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -104,7 +108,7 @@ contact_long$State <- factor(contact_long$State, levels = levels(gmm_data$State)
 plot_frac <- ggplot(contact_long, aes(x = factor(Residue), y = Fraction, fill = State)) +
     geom_col(position = "dodge", color = "black") +
     scale_fill_brewer(palette = "Dark2") +
-    scale_x_discrete(labels = function(x) as.character(as.numeric(as.character(x)) + 20)) +
+    # REMOVED +20 OFFSET
     labs(title = "Per-Residue Contact Fraction", x = "Helix Residue", y = "Contact Fraction") +
     theme_publication() +
     theme(legend.position = c(0.20, 0.99), legend.justification = c("right", "top"),
@@ -163,8 +167,7 @@ melted <- melt(freq_df, id.vars=c("Contact", "HelixRes", "PocketRes"), variable.
 p_heatmap <- ggplot(melted, aes(x=PocketRes, y=HelixRes, fill=Frequency)) +
     geom_tile(color = "white", linewidth = 0.1) +
     scale_fill_viridis_c(option = "magma", limits=c(0,1), name="Contact\nFrequency") +
-    scale_x_continuous(labels = function(x) x + 20) +
-    scale_y_continuous(labels = function(y) y + 20) +
+    # REMOVED +20 OFFSET
     facet_wrap(~Cluster) +
     labs(title=paste("Contact Heatmap by State"), x="Pocket Residue", y="Helix Residue") +
     theme_publication() +
