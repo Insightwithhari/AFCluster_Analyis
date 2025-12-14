@@ -1,6 +1,6 @@
-# Integrative Modeling Identifies a Dual-Function Helix in Full-Length MDM2
+# 
 
-This repository contains the R scripts required to reproduce the molecular dynamics (MD) analysis and figures reported in the manuscript.
+This repository contains the R scripts required to reproduce the AFCluster analysis and figures reported in the manuscript.
 
 ## Repository Contents
 
