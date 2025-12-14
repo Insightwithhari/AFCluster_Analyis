@@ -1,7 +1,10 @@
 ############################################################
 # Script 03: Publication-quality figure generation
+# (Density, PCA scatter, boxplot, correlation, violin,
+#  gate residue frequency, contact fraction)
 ############################################################
 
+# --- Load libraries ---
 library(ggplot2)
 library(RColorBrewer)
 library(dplyr)
@@ -9,68 +12,133 @@ library(tidyr)
 library(reshape2)
 library(viridis)
 
-# --- Theme ---
-theme_publication <- function() {
-  theme_bw() +
+# --- Publication theme ---
+theme_publication <- function(base_size = 14) {
+  theme_bw(base_size = base_size) +
     theme(
-      plot.title = element_text(face = "bold", hjust = 0.5),
-      axis.title = element_text(face = "bold"),
-      panel.grid = element_blank(),
-      panel.border = element_rect(colour = "black")
+      plot.title   = element_text(face = "bold", hjust = 0.5),
+      axis.title   = element_text(face = "bold"),
+      axis.text    = element_text(colour = "black"),
+      panel.grid   = element_blank(),
+      panel.border = element_rect(colour = "black", fill = NA)
     )
 }
 
-# --- Load data ---
+# ---------------------------------------------------------
+# Load input data
+# ---------------------------------------------------------
 gmm <- read.csv("global_PC1_GMM_3_states.csv")
 contacts <- read.csv("per_residue_contact_fractions.csv")
+
 gmm$State <- factor(gmm$State)
 
-cols <- brewer.pal(nlevels(gmm$State), "Dark2")
+cluster_colors <- brewer.pal(nlevels(gmm$State), "Dark2")
 
-# --- PC1 Density ---
-p1 <- ggplot(gmm, aes(PC1, fill = State)) +
-  geom_density(alpha = 0.7) +
-  scale_fill_manual(values = cols) +
+# ---------------------------------------------------------
+# Figure 1: PC1 density plot
+# ---------------------------------------------------------
+p_density <- ggplot(gmm, aes(x = PC1, fill = State)) +
+  geom_density(alpha = 0.7, color = "black", linewidth = 0.2) +
+  scale_fill_manual(values = cluster_colors) +
+  labs(title = "State Distribution along PC1",
+       x = "PC1", y = "Probability Density") +
   theme_publication()
 
-ggsave("Fig_PC1_density.png", p1, 7, 5, dpi = 600)
+ggsave(
+  filename = "Fig_PC1_density.png",
+  plot     = p_density,
+  width    = 7,
+  height   = 5,
+  dpi      = 600
+)
 
-# --- PCA Scatter ---
-p2 <- ggplot(gmm, aes(PC1, PC2, color = State)) +
-  geom_point(alpha = 0.6) +
-  stat_ellipse(level = 0.8) +
-  scale_color_manual(values = cols) +
+# ---------------------------------------------------------
+# Figure 2: PCA scatter plot
+# ---------------------------------------------------------
+p_pca <- ggplot(gmm, aes(x = PC1, y = PC2, color = State)) +
+  geom_point(alpha = 0.6, size = 1.5) +
+  stat_ellipse(type = "norm", level = 0.80, linewidth = 0.8) +
+  scale_color_manual(values = cluster_colors) +
+  labs(title = "Conformational Landscape",
+       x = "PC1", y = "PC2") +
   theme_publication()
 
-ggsave("Fig_PCA_scatter.png", p2, 7, 5, dpi = 600)
+ggsave(
+  filename = "Fig_PCA_scatter.png",
+  plot     = p_pca,
+  width    = 7,
+  height   = 5,
+  dpi      = 600
+)
 
-# --- Distance by State ---
-p3 <- ggplot(gmm, aes(State, Distance, fill = State)) +
+# ---------------------------------------------------------
+# Figure 3: Distance by state (boxplot)
+# ---------------------------------------------------------
+p_box <- ggplot(gmm, aes(x = State, y = Distance, fill = State)) +
   geom_boxplot(alpha = 0.8) +
-  scale_fill_manual(values = cols) +
+  scale_fill_manual(values = cluster_colors) +
+  labs(title = "Helix–Pocket Distance by State",
+       x = "Conformational State",
+       y = "Average Heavy-Atom Distance (Å)") +
   theme_publication() +
   theme(legend.position = "none")
 
-ggsave("Fig_distance_box.png", p3, 7, 5, dpi = 600)
-
-# --- PC1 vs Distance ---
-p4 <- ggplot(gmm, aes(PC1, Distance)) +
-  geom_point(alpha = 0.4) +
-  geom_smooth(method = "lm", linetype = "dashed", se = FALSE) +
-  theme_publication()
-
-ggsave("Fig_PC1_vs_distance.png", p4, 7, 5, dpi = 600)
-
-# --- Per-residue contact fraction ---
-contacts_long <- pivot_longer(
-  contacts, cols = -Residue,
-  names_to = "State", values_to = "Fraction"
+ggsave(
+  filename = "Fig_distance_box.png",
+  plot     = p_box,
+  width    = 7,
+  height   = 5,
+  dpi      = 600
 )
 
-p5 <- ggplot(contacts_long, aes(factor(Residue), Fraction, fill = State)) +
-  geom_col(position = "dodge") +
-  scale_fill_manual(values = cols) +
+# ---------------------------------------------------------
+# Figure 4: PC1 vs distance correlation
+# ---------------------------------------------------------
+p_corr <- ggplot(gmm, aes(x = PC1, y = Distance)) +
+  geom_point(alpha = 0.4, size = 1.8, color = "red") +
+  geom_smooth(method = "lm", se = FALSE,
+              linetype = "dashed", color = "black") +
+  labs(title = "PC1 vs. Helix–Pocket Distance",
+       x = "PC1",
+       y = "Average Heavy-Atom Distance (Å)") +
+  theme_publication()
+
+ggsave(
+  filename = "Fig_PC1_vs_distance.png",
+  plot     = p_corr,
+  width    = 7,
+  height   = 5,
+  dpi      = 600
+)
+
+# ---------------------------------------------------------
+# Figure 5: Per-residue contact fraction
+# ---------------------------------------------------------
+contacts_long <- pivot_longer(
+  contacts,
+  cols = -Residue,
+  names_to = "State",
+  values_to = "Fraction"
+)
+
+p_contact <- ggplot(contacts_long,
+                    aes(x = factor(Residue),
+                        y = Fraction,
+                        fill = State)) +
+  geom_col(position = "dodge", color = "black") +
+  scale_fill_manual(values = cluster_colors) +
+  labs(title = "Per-Residue Contact Fraction by State",
+       x = "Helix Residue",
+       y = "Contact Fraction") +
   theme_publication() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave("Fig_contact_fraction.png", p5, 8, 5, dpi = 600)
+ggsave(
+  filename = "Fig_contact_fraction.png",
+  plot     = p_contact,
+  width    = 8,
+  height   = 5,
+  dpi      = 600
+)
+
+cat("All figures generated successfully.\n")
