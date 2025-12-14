@@ -5,7 +5,7 @@
 #   1. Loads trajectory and reference structure.
 #   2. Calculates global geometric metrics (Avg Heavy Atom Dist, Min C-alpha Dist).
 #   3. Performs PCA and GMM clustering to identify metastable states.
-#   4. Generates publication-quality figures (A-D) and summary statistics.
+#   4. Generates publication-quality figures (A-E) and summary statistics.
 # ==============================================================================
 
 # --- 1. Libraries ---
@@ -16,9 +16,9 @@ library(RColorBrewer)
 library(dplyr)    
 
 # --- 2. User Inputs & Parameters ---
-# ADJUST THESE PATHS FOR YOUR SYSTEM
-topology_pdb  <- "Refrence.pdb"       # Input PDB file
-dcd_file      <- "Trajectory.dcd"     # Input DCD file
+# Ensure these filenames match exactly what is in your folder
+topology_pdb  <- "Refrence.pdb"       
+dcd_file      <- "Trajectory.dcd"     
 helix_resnos  <- 190:205              # Residue range for Helix
 pocket_resnos <- 21:109               # Residue range for Pocket
 project_prefix <- "MDM2_Analysis"     # Prefix for all output files
@@ -40,7 +40,9 @@ theme_publication <- function(base_size=14) {
 
 # --- 4. Load Data ---
 cat("Loading structural data...\n")
-if(!file.exists(topology_pdb) | !file.exists(dcd_file)) stop("Files not found. Check paths.")
+if(!file.exists(topology_pdb)) stop(paste("File not found:", topology_pdb))
+if(!file.exists(dcd_file)) stop(paste("File not found:", dcd_file))
+
 topology <- read.pdb(topology_pdb)
 traj_xyz <- read.dcd(dcd_file)
 
